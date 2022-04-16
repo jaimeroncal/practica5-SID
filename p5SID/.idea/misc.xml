@@ -3,8 +3,12 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/jaime/Documents/GitHub/practica5-SID/p5SID/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.21354166666666666" />
         <entry key="..\:/Users/jaime/Documents/GitHub/practica5-SID/p5SID/app/src/main/res/drawable-v24/roundedbutton.xml" value="0.2203125" />
         <entry key="..\:/Users/jaime/Documents/GitHub/practica5-SID/p5SID/app/src/main/res/drawable/buscar_background.xml" value="0.1125" />
+        <entry key="..\:/Users/jaime/Documents/GitHub/practica5-SID/p5SID/app/src/main/res/drawable/ic_baseline_search_24.xml" value="0.21354166666666666" />
+        <entry key="..\:/Users/jaime/Documents/GitHub/practica5-SID/p5SID/app/src/main/res/drawable/ic_launcher_background.xml" value="0.21354166666666666" />
+        <entry key="..\:/Users/jaime/Documents/GitHub/practica5-SID/p5SID/app/src/main/res/drawable/search_background.xml" value="0.21354166666666666" />
         <entry key="..\:/Users/jaime/Documents/GitHub/practica5-SID/p5SID/app/src/main/res/layout/activity_main.xml" value="0.25" />
       </map>
     </option>

@@ -7,5 +7,5 @@
         <solid android:color="@color/rosa"></solid>
     </shape>
 </item>
-<!--<item android:drawable="" />-->
+<item android:drawable="@drawable/search_foreground" />
 </layer-list>
