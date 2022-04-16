@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -103,24 +104,10 @@ public class AsyncTaskMain extends AsyncTask<Location, Void, AsyncTaskMain.Image
     {
         if (mActivity == null)
             Log.i("MyAsyncTask", "Me salto onPostExecute() -- no hay nueva activity");
+        else if (imagen.titulo == null || imagen.imagen==null || imagen.longitud == null || imagen.latitud == null)
+            Toast.makeText(mActivity, "ERROR on Flickr Search", Toast.LENGTH_SHORT).show();
         else {
-            // INVISIBLE MESSAGE
-            TextView message = (TextView) mActivity.findViewById(R.id.empty);
-            message.setVisibility(View.GONE);
-            // SET TITLE
-            TextView mTitulo = (TextView) mActivity.findViewById(R.id.titulo);
-            mTitulo.setText(imagen.titulo);
-            mTitulo.setVisibility(View.VISIBLE);
-            // SET LAT LONG
-            TextView mLatLong = (TextView) mActivity.findViewById(R.id.latlong);
-            mLatLong.setText("Latitud: "+imagen.latitud+", Longitud: "+imagen.longitud);
-            mLatLong.setVisibility(View.VISIBLE);
-            // SET IMAGE
-            ImageView mImagen = (ImageView) mActivity.findViewById(R.id.imagen);
-            mImagen.setImageBitmap(imagen.imagen);
-            mImagen.setVisibility(View.VISIBLE);
-
-            mActivity.setupAdapter(0);
+            mActivity.setupAdapter(imagen);
         }
     }
 

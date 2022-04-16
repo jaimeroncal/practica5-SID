@@ -1,25 +1,39 @@
 package es.unizar.eina.p5sid;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -29,6 +43,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
     private Location localizacion;
+    private Marker markerMyPosition;
+    private Marker markerImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,13 +56,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // Create location client
+        // Create location client and first location
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
+        // while no permission ask for it
+        while (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+        }
+        fusedLocationClient.getLastLocation().addOnSuccessListener(this,
+                new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            localizacion = new Location("");
+                            localizacion.setLatitude(location.getLatitude());
+                            localizacion.setLongitude(location.getLongitude());
+                        }
+                    }
+                }
+        );
         // Botón buscar
         ImageButton botonAnadir = (ImageButton) findViewById(R.id.search);
         botonAnadir.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+                updateLocation();
                 llamarATarea();
             }
         });
@@ -64,10 +97,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (myTask == null) {
             // Evita crear una AsyncTask cada vez que, por ejemplo, hay una rotación
             Log.i(TAG, "onCreate: About to create MyAsyncTask");
-
-            // get location
-            getLocation();
-
             myTask = new AsyncTaskMain(this);
             myTask.execute(localizacion);
         } else
@@ -75,27 +104,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Toast.makeText(this, "Buscando en Flickr", Toast.LENGTH_LONG).show();
     }
 
-    public void getLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+    public void updateLocation() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setNumUpdates(1);
+        locationRequest.setInterval(0);
+        // while no permission ask for it
+        while (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
         }
-        fusedLocationClient.getLastLocation().addOnSuccessListener(this,
-                new OnSuccessListener<Location>() {
+        fusedLocationClient.requestLocationUpdates(locationRequest,
+                new LocationCallback() {
                     @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            localizacion.setLatitude(location.getLatitude());
-                            localizacion.setLongitude(location.getLongitude());
-                        }
+                    public void onLocationResult(LocationResult result) {
+                        if (result == null)
+                            return;
+                        int lastIndex = result.getLocations().size() - 1;
+                        Location location = result.getLocations().get(lastIndex);
+                        localizacion = new Location("");
+                        localizacion.setLatitude(location.getLatitude());
+                        localizacion.setLongitude(location.getLongitude());
                     }
-                }
+                },
+                Looper.getMainLooper()
         );
     }
 
@@ -108,16 +140,40 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return myTask;
     }
 
-    public void setupAdapter(Integer integer)
+    public void setupAdapter(AsyncTaskMain.Imagen imagen)
     {
-        if (integer != -1)
-            Toast.makeText(MainActivity.this,
-                    "Codigo de respuesta: " + integer, Toast.LENGTH_LONG).show();
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions()
-                .position(sydney)
-                .title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        // INVISIBLE MESSAGE
+        TextView message = (TextView) findViewById(R.id.empty);
+        message.setVisibility(View.GONE);
+        // SET TITLE
+        TextView mTitulo = (TextView) findViewById(R.id.titulo);
+        mTitulo.setText(imagen.titulo);
+        mTitulo.setVisibility(View.VISIBLE);
+        // SET LAT LONG
+        TextView mLatLong = (TextView) findViewById(R.id.latlong);
+        mLatLong.setText("Latitud: "+imagen.latitud+", Longitud: "+imagen.longitud);
+        mLatLong.setVisibility(View.VISIBLE);
+        // SET IMAGE
+        ImageView mImagen = (ImageView) findViewById(R.id.imagen);
+        mImagen.setImageBitmap(imagen.imagen);
+        mImagen.setVisibility(View.VISIBLE);
+
+        // Add a in my location and move the camera
+        LatLng myPosition = new LatLng(localizacion.getLatitude(), localizacion.getLongitude());
+        if (markerMyPosition!=null) markerMyPosition.remove();
+        markerMyPosition = mMap.addMarker(new MarkerOptions()
+                .position(myPosition)
+                .title("Estás aquí"));
+        markerMyPosition.showInfoWindow();
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPosition, 13.0f));
+
+        BitmapDescriptor bitmap = BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(imagen.imagen, 60, 60,false));
+        // Add a in my location and move the camera
+        LatLng imagePosition = new LatLng(Double.parseDouble(imagen.latitud), Double.parseDouble(imagen.longitud));
+        if (markerImage!=null) markerImage.remove();
+        markerImage = mMap.addMarker(new MarkerOptions()
+                .position(imagePosition)
+                .title(imagen.titulo));
+        markerImage.setIcon(bitmap);
     }
 }
