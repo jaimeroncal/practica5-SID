@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .position(myPosition)
                 .title("Estás aquí"));
         markerMyPosition.showInfoWindow();
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPosition, 13.0f));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myPosition, 12.0f));
 
         BitmapDescriptor bitmap = BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(imagen.imagen, 60, 60,false));
         // Add a in my location and move the camera

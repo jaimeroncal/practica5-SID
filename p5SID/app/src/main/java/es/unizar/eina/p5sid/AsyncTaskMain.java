@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.media.Image;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
@@ -68,10 +69,21 @@ public class AsyncTaskMain extends AsyncTask<Location, Void, AsyncTaskMain.Image
         HttpURLConnection connection;
         Double latitud = params[0].getLatitude();
         Double longitud = params[0].getLongitude();
-        String url =  "https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key="+mActivity.getString(R.string.apiFlickr)+"&lat="+latitud.toString()+"&lon="+longitud.toString()+"&radius=5&radius_units=km&sort=date-posted-desc&extras=geo,url_s&format=json&nojsoncallback=1";
+        Uri queryFlickr = Uri.parse("https://api.flickr.com/services/rest/").
+                buildUpon().appendQueryParameter("method", "flickr.photos.search").build().
+                buildUpon().appendQueryParameter("api_key", mActivity.getString(R.string.apiFlickr)).build().
+                buildUpon().appendQueryParameter("lat", latitud.toString()).build().
+                buildUpon().appendQueryParameter("lon", longitud.toString()).build().
+                buildUpon().appendQueryParameter("radius", "5").build().
+                buildUpon().appendQueryParameter("radius_units", "km").build().
+                buildUpon().appendQueryParameter("sort", "date-posted-desc").build().
+                buildUpon().appendQueryParameter("extras", "geo,url_s").build().
+                buildUpon().appendQueryParameter("format", "json").build().
+                buildUpon().appendQueryParameter("nojsoncallback", "1").build();
+        Log.d("URI: ", queryFlickr.toString());
         try {
             // GET LIST
-            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection = (HttpURLConnection) new URL(queryFlickr.toString()).openConnection();
             InputStreamReader reader = new InputStreamReader(connection.getInputStream());
             Gson gson = new Gson();
             Result resultado = gson.fromJson(reader, Result.class);
